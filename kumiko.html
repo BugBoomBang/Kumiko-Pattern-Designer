@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ashanoa Pattern</title>
+  <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+  <style>
+    .sidenav {
+      height: 100%;
+      width: 160px;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: #ffffff;
+      overflow-x: hidden;
+      padding-top: 20px;
+    }
+
+
+    .svg_container {
+      margin-left: 160px; /* Same as the width of the sidenav */
+      font-size: 28px; /* Increased text to enable scrolling */
+      padding: 0px 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+
+
+<div class="sidenav">
+
+<form>
+  <p>Select Kumiko Pattern:</p>
+  <input type="radio" id="asanoha" name="kumiko_pattern" value="asanoha" checked>
+  <label for="html">Asanoha</label><br>
+  <input type="radio" id="kagome" name="kumiko_pattern" value="kagome">
+  <label for="kagome">Kagome</label><br>
+  <input type="radio" id="kasana_rindo" name="kumiko_pattern" value="kasana_rindo">
+  <label for="javascript">Kasane-Rindo</label><br>
+  <input type="radio" id="tsumiishi_kikko" name="kumiko_pattern" value="tsumiishi_kikko">
+  <label for="javascript">Tsumiishi-Kikko</label>
+</form>
+
+
+
+</div>
+
+
+<div id="svg_container"></div>
+
+</body>
+
+
+<script>
+
+
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+
+// Assuming you have the form element containing the radio buttons
+var form = document.querySelector('form');
+
+
+// Add an event listener to the form to detect changes in the radio button group
+form.addEventListener('change', function() {
+  // Get the selected radio button within the group
+  var selectedOption = form.querySelector('input[name="kumiko_pattern"]:checked');
+
+  // Check if an option is selected and retrieve its value
+  if (selectedOption) {
+    var selectedValue = selectedOption.value;
+    console.log('Selected Value:', selectedValue);
+  }
+});
+
+function getCurrentKumikoPattern() {
+  return form.querySelector('input[name="kumiko_pattern"]:checked').value
+}
+
+
+// initialize SVG.js
+var draw = SVG().addTo('#svg_container').size(2000, 2000).addClass('svg_pane');
+
+console.log(draw.viewbox()
+)
+// main settings 
+var sidelen = 120;
+var height = sidelen * Math.cos(Math.PI / 6);
+var attr = {
+  fill: 'none', 
+  stroke: ' blue',
+  'stroke-width': 1,
+  'stroke-linecap': 'round',
+  'stroke-linejoin': 'round'
+}
+
+draw.click(function(event) {
+
+  // clickPoint = draw.point(event.pageX, event.pageY)
+
+  var scrollX = window.scrollX || window.pageXOffset;
+  var scrollY = window.scrollY || window.pageYOffset;
+
+  clickPoint = new Point(event.x+ scrollX, event.y+ scrollY)
+  console.log('event: x:' + event.x + ', y:' + event.y);
+  console.log('clickPoint: x:' + clickPoint.x + ', y:' + clickPoint.y);
+  console.log('height: ' + Math.round(height));
+  console.log(Math.round(clickPoint.y/height))
+  console.log(draw.node.getBoundingClientRect())
+  // console.log('clientX/clientY: x:' + event.clientX + ', y:' + event.clientY);
+
+
+  // rastersize pane into a rectangular grid (x-spacing: triangle sidelength, y-spacing: triangle height) and get the respective row and column index
+  row = Math.floor(clickPoint.y/height)
+  col = Math.floor((clickPoint.x + (row % 2) * sidelen / 2) / sidelen)
+
+  // console.log('col:' + col)
+  // console.log('row:' + row)
+
+  // calculate the actuall x and y offset based on the row and column
+  x_offset = col * sidelen - (row % 2) * sidelen / 2;  // every second row has an additional x-offset of a half triangle sidelength
+  y_offset = row * height;
+
+  // console.log('x_offset:' + x_offset);
+  // console.log('y_offset:' + y_offset);
+
+  point_rect_upper_left = new Point(x_offset, y_offset);
+  point_rect_upper_right = new Point(x_offset+sidelen, y_offset);
+  point_rect_lower_middle = new Point(x_offset+sidelen/2, y_offset+height);
+
+  // circle_diameter = 10;
+  // radius = circle_diameter/2;
+  // console.log('rect_upper_left: x=' + point_rect_upper_left.x + ' y=' + point_rect_upper_left.y)
+  // draw.circle(circle_diameter).move(point_rect_upper_left.x-radius, point_rect_upper_left.y-radius);
+
+  // console.log('rect_upper_right: x=' + point_rect_upper_right.x + ' y=' + point_rect_upper_right.y)
+  // draw.circle(circle_diameter).move(point_rect_upper_right.x-radius, point_rect_upper_right.y-radius).attr({fill: 'green'});
+
+  // console.log('rect_lower_middle: x=' + point_rect_lower_middle.x + ' y=' + point_rect_lower_middle.y)
+  // draw.circle(circle_diameter).move(point_rect_lower_middle.x-radius, point_rect_lower_middle.y-radius).attr({fill: 'red'});
+
+
+  var line1_p1 = point_rect_upper_left;
+  var line1_p2 = point_rect_lower_middle;
+  let line1_slope_a = (line1_p2.y - line1_p1.y) / (line1_p2.x - line1_p1.x);
+  let line1_offset_b = line1_p2.y - line1_slope_a * line1_p2.x;        
+  // console.log("line1_slope_a=" + line1_slope_a);
+  // console.log("line1_offset_b=" + line1_offset_b);
+
+  var line2_p1 = point_rect_upper_right;
+  var line2_p2 = point_rect_lower_middle;
+  let line2_slope_a = (line2_p2.y - line2_p1.y) / (line2_p2.x - line2_p1.x);
+  let line2_offset_b = line2_p2.y - line2_slope_a * line2_p2.x;        
+  // console.log("line2_slope_a=" + line2_slope_a);
+  // console.log("line2_offset_b=" + line2_offset_b);
+
+
+  var y_line1_at_clicked_point = line1_slope_a * clickPoint.x + line1_offset_b;
+  var y_line2_at_clicked_point = line2_slope_a * clickPoint.x + line2_offset_b;
+
+  let triangle_point1, triangle_point2, triangle_point3, triangle_centroid;
+
+  if (clickPoint.y > y_line1_at_clicked_point) {
+    // case 1: point belongs to left triangle
+    console.log('// case 1: point belongs to left triangle')
+    triangle_point1 = point_rect_upper_left;
+    triangle_point2 = point_rect_lower_middle;
+    triangle_point3 = new Point(point_rect_lower_middle.x-sidelen, point_rect_lower_middle.y);
+    triangle_centroid = new Point(point_rect_lower_middle.x - sidelen / 2, point_rect_lower_middle.y - height / 3);  
+  }
+  else if (clickPoint.y > y_line2_at_clicked_point) {
+    // case 3: point belongs to left triangle
+    console.log('// case 3: point belongs to right triangle')
+    triangle_point1 = point_rect_upper_right;
+    triangle_point2 = point_rect_lower_middle;
+    triangle_point3 = new Point(point_rect_lower_middle.x+sidelen, point_rect_lower_middle.y);  
+    triangle_centroid = new Point(point_rect_lower_middle.x + sidelen / 2, point_rect_lower_middle.y - height / 3);  
+  }
+  else {
+    // case 2: point belongs to left triangle
+    console.log('// case 2: point belongs to middle triangle')
+    triangle_point1 = point_rect_upper_left;
+    triangle_point2 = point_rect_upper_right;
+    triangle_point3 = point_rect_lower_middle;   
+    triangle_centroid = new Point(point_rect_upper_left.x + sidelen / 2, point_rect_upper_left.y + height / 3);
+  }
+
+  drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], {
+    fill: 'none', 
+    stroke: ' blue',
+    'stroke-width': 5,
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+  })
+
+
+
+  switch(getCurrentKumikoPattern()) {
+    case 'asanoha':
+      draw_inlay_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+    case 'kagome':
+      draw_inlay_kagome(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+    case 'kasana_rindo':
+      draw_inlay_kasane_rindo(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+    case 'tsumiishi_kikko':
+      draw_inlay_tsumiishi_kikko(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+    default:
+      console.log('unknown kumiko pattern: ' + getCurrentKumikoPattern())
+
+    
+
+
+
+  }
+
+  console.log('point is in rectangle xIdx=' + row + " yIdx=" + col)
+
+});
+
+
+function drawPolyline(pointList, attributes) {
+
+  polylinePointlist = []
+  for (const p of pointList) {
+    polylinePointlist.push([p.x, p.y]) 
+  }
+
+  // draw polyline
+  return draw.polyline(polylinePointlist).attr(attributes)
+}
+
+//height = Math.sqrt(3)/2*10;
+/* console.log(height); */
+
+
+// for (let row = 0; row < 8; row++) {
+//   for (let col = 0; col < 8; col++) {
+//     r_offset = row * sidelen + (col % 2) * sidelen / 2;
+//     c_offset = col * height;
+
+//     triangle_p1 = [r_offset, c_offset]
+//     triangle_p2 = [r_offset + sidelen / 2, c_offset + height]
+//     triangle_p3 = [r_offset + sidelen, c_offset]
+
+//     triangle_centroid = [r_offset + sidelen / 2, c_offset + height / 3]
+
+//     // draw triangle
+//     var polyline = draw.polyline([triangle_p1, triangle_p2, triangle_p3, triangle_p1]).attr(attr)
+
+//     var rect = draw.rect(sidelen, height).move(r_offset, c_offset).attr({
+//       fill: 'none', 
+//       stroke: ' red',
+//       'stroke-width': 1,
+// })
+
+//     threshold = 0.05;
+
+//     // draw inlay
+//     // if (r() > threshold) {
+//     //   draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
+//     // }
+//     // if (r() > threshold) {  
+//     //   draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
+//     // }
+//     // if (r() > threshold) {
+//     //   // draw_inlay_kagome(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
+//     // }
+//     // if (r() > threshold) {
+//     //   draw_inlay_kasane_rindo(triangle_p1, triangle_p2, triangle_p3)
+//     // }
+
+//     // draw inlay of neighbouring triangle
+//     ntriangle_p1 = [r_offset + 3 / 2 * sidelen, c_offset + height]
+//     ntriangle_p2 = triangle_p2
+//     ntriangle_p3 = triangle_p3
+//     ntriangle_centroid = [r_offset + sidelen, c_offset + height * 2 / 3]
+
+//     // draw neighbouring triangle
+//     var polyline = draw.polyline([ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_p1]).attr(attr)
+
+//     // draw inlay for neighbouring triangle    
+//     // if (r() > threshold) {
+//     //   // draw_inlay_asanoha(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
+//     // }
+//     // if (r() > threshold) {
+//     //   draw_inlay_tsumiishi_kikko(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
+//     // }
+//     // if (r() > threshold) {
+//     //   // draw_inlay_kagome(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
+//     // }
+//     // if (r() > threshold) {
+//     //   draw_inlay_kasane_rindo(ntriangle_p1, ntriangle_p2, ntriangle_p3)
+//     // }
+//   }
+// }
+
+function draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  var polyline = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
+}
+
+function draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  var polyline = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
+}
+
+function draw_inlay_kagome(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  // // component 1
+  var corner1_point1 = getIntermediatePoint(triangle_p1, triangle_p2, 1.0/3)
+  var corner1_point2 = getIntermediatePoint(triangle_p1, triangle_p3, 1.0/3)
+  var line = draw.line(corner1_point1.x, corner1_point1.y, corner1_point2.x, corner1_point2.y).attr(attr);
+  // // component 2
+  var corner2_point1 = getIntermediatePoint(triangle_p2, triangle_p1, 1.0/3)
+  var corner2_point2 = getIntermediatePoint(triangle_p2, triangle_p3, 1.0/3)
+  var line = draw.line(corner2_point1.x, corner2_point1.y, corner2_point2.x, corner2_point2.y).attr(attr);
+  // component 3
+  var corner3_point1 = getIntermediatePoint(triangle_p3, triangle_p1, 1.0/3)
+  var corner3_point2 = getIntermediatePoint(triangle_p3, triangle_p2, 1.0/3)
+  var line = draw.line(corner3_point1.x, corner3_point1.y, corner3_point2.x, corner3_point2.y).attr(attr)
+}
+
+function draw_inlay_kasane_rindo(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  // // component 1
+  var p1 = getIntermediatePoint(triangle_p3, triangle_p2, 1.0/4)
+  var line = draw.line(triangle_p1.x, triangle_p1.y, p1.x, p1.y).attr(attr);
+  // // component 2
+  var p1 = getIntermediatePoint(triangle_p3, triangle_p1, 1.0/4)
+  var line = draw.line(triangle_p2.x, triangle_p2.y, p1.x, p1.y).attr(attr);
+}
+
+function getIntermediatePoint(point1, point2, frac) {
+  return new Point(point1.x + frac*(point2.x-point1.x), point1.y + frac*(point2.y-point1.y));
+}
+
+function r() {
+  return Math.random()
+}
+
+var svg_export = draw.svg()
+
+</script>
+
+
+</html>
