@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ashanoa Pattern</title>
+  <title>Kumiko Pattern Designer</title>
   <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
   <style>
     .sidenav {
@@ -33,14 +33,19 @@
 
 <form>
   <p>Select Kumiko Pattern:</p>
-  <input type="radio" id="asanoha" name="kumiko_pattern" value="asanoha" checked>
-  <label for="html">Asanoha</label><br>
-  <input type="radio" id="kagome" name="kumiko_pattern" value="kagome">
-  <label for="kagome">Kagome</label><br>
-  <input type="radio" id="kasana_rindo" name="kumiko_pattern" value="kasana_rindo">
-  <label for="javascript">Kasane-Rindo</label><br>
+  <input type="radio" id="asanoha" name="kumiko_pattern" value="asanoha" checked>
+  <label for="html">Asanoha</label><br>
+  <input type="radio" id="kagome" name="kumiko_pattern" value="kagome">
+  <label for="kagome">Kagome</label><br>
+  <input type="radio" id="kasana_rindo" name="kumiko_pattern" value="kasana_rindo">
+  <label for="javascript">Kasane-Rindo</label><br>
   <input type="radio" id="tsumiishi_kikko" name="kumiko_pattern" value="tsumiishi_kikko">
-  <label for="javascript">Tsumiishi-Kikko</label>
+  <label for="javascript">Tsumiishi-Kikko</label>
+  <input type="radio" id="triangle_frame" name="kumiko_pattern" value="triangle_frame">
+  <label for="javascript">Triangle frame</label>
+  <p>Other options:</p>
+  <input type="radio" id="delete_single_pattern" name="kumiko_pattern" value="delete_single_pattern">
+  <label for="javascript">Delete single Pattern</label>
 </form>
 
 
@@ -91,15 +96,19 @@ var draw = SVG().addTo('#svg_container').size(2000, 2000).addClass('svg_pane');
 console.log(draw.viewbox()
 )
 // main settings 
-var sidelen = 120;
+var sidelen = 40;
 var height = sidelen * Math.cos(Math.PI / 6);
 var attr = {
   fill: 'none', 
   stroke: ' blue',
-  'stroke-width': 1,
+  'stroke-width': 4,
   'stroke-linecap': 'round',
   'stroke-linejoin': 'round'
 }
+
+// Create an map for remembering the svg objects in the pane
+const memoryMap = new Map();
+
 
 draw.click(function(event) {
 
@@ -192,38 +201,84 @@ draw.click(function(event) {
     triangle_centroid = new Point(point_rect_upper_left.x + sidelen / 2, point_rect_upper_left.y + height / 3);
   }
 
-  drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], {
+  var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], {
     fill: 'none', 
     stroke: ' blue',
-    'stroke-width': 5,
+    'stroke-width': 4,
     'stroke-linecap': 'round',
     'stroke-linejoin': 'round'
   })
 
 
+  triangleId = getTriangleId(triangle_point1, triangle_point2, triangle_point3)
+  pushValuesIntoMap(memoryMap, triangleId, [triangle]);
 
+  var svg_elements;
   switch(getCurrentKumikoPattern()) {
     case 'asanoha':
-      draw_inlay_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+      svg_elements = draw_inlay_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
+      break
     case 'kagome':
-      draw_inlay_kagome(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+      svg_elements = draw_inlay_kagome(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
+      break
     case 'kasana_rindo':
-      draw_inlay_kasane_rindo(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+      svg_elements = draw_inlay_kasane_rindo(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
+  break
     case 'tsumiishi_kikko':
-      draw_inlay_tsumiishi_kikko(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr)
+      svg_elements = draw_inlay_tsumiishi_kikko(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
+      break
+    case 'triangle_frame':
+      break;    
+    case 'delete_single_pattern':
+      // delete patterns at clicked region
+      console.log('memoryMap[triangleId]=' + memoryMap[triangleId])
+      console.log(memoryMap)
+      console.log(triangleId)
+      removeElements(memoryMap.get(triangleId));
+      break;
     default:
       console.log('unknown kumiko pattern: ' + getCurrentKumikoPattern())
-
     
-
-
-
   }
 
-  console.log('point is in rectangle xIdx=' + row + " yIdx=" + col)
+
+  
+
+  // console.log('point is in rectangle xIdx=' + row + " yIdx=" + col)
 
 });
 
+
+
+// Function to push values into the map based on a key
+function pushValuesIntoMap(map, key, values) {
+  // Check if the key exists in the map
+  if (map.has(key)) {
+    // If the key exists, push all values into the existing array
+    map.get(key).push(...values);
+  } else {
+    // If the key doesn't exist, initialize a new array with the values
+    map.set(key, [...values]);
+  }
+}
+
+function getTriangleId(triangle_point1, triangle_point2, triangle_point3) {
+  return triangle_point1.x + '-' + triangle_point1.y + '-' + triangle_point2.x + '-' + triangle_point2.y + '-' + triangle_point3.x + '-' + triangle_point3.y;
+}
+
+function removeElements(svgElements) {
+  for (const elem of svgElements) {
+    elem.remove(); 
+  }
+}
 
 function drawPolyline(pointList, attributes) {
 
@@ -302,35 +357,41 @@ function drawPolyline(pointList, attributes) {
 // }
 
 function draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
-  var polyline = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
+  var pattern = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
+  return [pattern];
 }
 
 function draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
-  var polyline = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
+  var pattern = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
+  return [pattern];
 }
 
 function draw_inlay_kagome(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   // // component 1
   var corner1_point1 = getIntermediatePoint(triangle_p1, triangle_p2, 1.0/3)
   var corner1_point2 = getIntermediatePoint(triangle_p1, triangle_p3, 1.0/3)
-  var line = draw.line(corner1_point1.x, corner1_point1.y, corner1_point2.x, corner1_point2.y).attr(attr);
+  var line1 = draw.line(corner1_point1.x, corner1_point1.y, corner1_point2.x, corner1_point2.y).attr(attr);
   // // component 2
   var corner2_point1 = getIntermediatePoint(triangle_p2, triangle_p1, 1.0/3)
   var corner2_point2 = getIntermediatePoint(triangle_p2, triangle_p3, 1.0/3)
-  var line = draw.line(corner2_point1.x, corner2_point1.y, corner2_point2.x, corner2_point2.y).attr(attr);
+  var line2 = draw.line(corner2_point1.x, corner2_point1.y, corner2_point2.x, corner2_point2.y).attr(attr);
   // component 3
   var corner3_point1 = getIntermediatePoint(triangle_p3, triangle_p1, 1.0/3)
   var corner3_point2 = getIntermediatePoint(triangle_p3, triangle_p2, 1.0/3)
-  var line = draw.line(corner3_point1.x, corner3_point1.y, corner3_point2.x, corner3_point2.y).attr(attr)
+  var line3 = draw.line(corner3_point1.x, corner3_point1.y, corner3_point2.x, corner3_point2.y).attr(attr)
+
+  return [line1, line2, line3];
 }
 
 function draw_inlay_kasane_rindo(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   // // component 1
   var p1 = getIntermediatePoint(triangle_p3, triangle_p2, 1.0/4)
-  var line = draw.line(triangle_p1.x, triangle_p1.y, p1.x, p1.y).attr(attr);
+  var line1 = draw.line(triangle_p1.x, triangle_p1.y, p1.x, p1.y).attr(attr);
   // // component 2
   var p1 = getIntermediatePoint(triangle_p3, triangle_p1, 1.0/4)
-  var line = draw.line(triangle_p2.x, triangle_p2.y, p1.x, p1.y).attr(attr);
+  var line2 = draw.line(triangle_p2.x, triangle_p2.y, p1.x, p1.y).attr(attr);
+
+  return [line1, line2];
 }
 
 function getIntermediatePoint(point1, point2, frac) {
