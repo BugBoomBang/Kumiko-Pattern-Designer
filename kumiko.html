@@ -23,8 +23,8 @@
       z-index: 1;
       top: 0;
       left: 0;
-      background-color: black;
-      color: white;
+      background-color: #000000;
+      color: #ffffff;
       overflow-x: hidden;
       padding: 20px 20px 20px 20px;
       font-family: 'Smooch Sans', sans-serif;
@@ -78,29 +78,19 @@
 <div class="sidenav">
 
 <form>
-  <p style="margin-bottom: 5px; font-size: 18px; font-weight: 100;">KUMIKO PATTERN</p>
+  <p style="margin-bottom: 5px;">Kumiko Pattern:</p>
   <input type="radio" id="asanoha" name="kumiko_pattern" value="asanoha" checked>
-  <img height=15px src="assets/asanoha.svg" />
-  <label for="asanoha">Asanoha</label>
-  <br>
+  <label for="asanoha">Asanoha</label><br>
   <input type="radio" id="kagome" name="kumiko_pattern" value="kagome">
-  <img height=15px src="assets/kagome.svg" />
-  <label for="kagome">Kagome</label>
-  <br>
+  <label for="kagome">Kagome</label><br>
   <input type="radio" id="kasana_rindo" name="kumiko_pattern" value="kasana_rindo">
-  <img height=15px src="assets/kasane-rindo.svg" />
-  <label for="kasana_rindo">Kasane-Rindo</label>
-  <br>
+  <label for="kasana_rindo">Kasane-Rindo</label><br>
   <input type="radio" id="tsumiishi_kikko" name="kumiko_pattern" value="tsumiishi_kikko">
-  <img height=15px src="assets/tsumiishi-kikko.svg" />
-  <label for="tsumiishi_kikko">Tsumiishi-Kikko</label>
-  <br>
-  <input type="radio" id="triangle_frame" name="kumiko_pattern" value="triangle_frame">
-  <img height=15px src="assets/triangle.svg" />
-  <label for="triangle_frame">Triangle</label>
-  <br>
+  <label for="tsumiishi_kikko">Tsumiishi-Kikko</label><br>
   
-  <p style="margin-bottom: 5px; font-size: 18px; font-weight: 100;">OTHER OPTIONS</p>
+  <p style="margin-bottom: 5px;">Other options:</p>
+  <input type="radio" id="triangle_frame" name="kumiko_pattern" value="triangle_frame">
+  <label for="triangle_frame">Triangle frame only</label><br>
   <input type="radio" id="delete_single_pattern" name="kumiko_pattern" value="delete_single_pattern">
   <label for="delete_single_pattern">Delete (on click)</label>
 
@@ -147,7 +137,7 @@
 <script>
 
 // initialize SVG.js
-var draw = SVG().addTo('#svg_container').size(1500, 1000).addClass('svg_pane');
+var draw = SVG().addTo('#svg_container').size(1000, 1000).addClass('svg_pane');
 console.log(draw.viewbox())
 
 
@@ -248,10 +238,10 @@ draw.click(function(event) {
 
   // clickPoint = draw.point(event.pageX, event.pageY)
 
-  var scrollX = (window.scrollX || window.pageXOffset);
+  var scrollX = window.scrollX || window.pageXOffset;
   var scrollY = window.scrollY || window.pageYOffset;
 
-  clickPoint = new Point(event.x+ scrollX -220, event.y+ scrollY)
+  clickPoint = new Point(event.x+ scrollX, event.y+ scrollY)
   console.log('event: x:' + event.x + ', y:' + event.y);
   console.log('clickPoint: x:' + clickPoint.x + ', y:' + clickPoint.y);
   console.log('height: ' + Math.round(height));
