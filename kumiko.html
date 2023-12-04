@@ -1,29 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
+  
   <title>Kumiko Pattern Designer</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Smooch+Sans&display=swap" rel="stylesheet">
+
   <style>
+
+    body {
+      margin: 0;
+    }
+
     .sidenav {
       height: 100%;
-      width: 160px;
+      width: 180px;
       position: fixed;
       z-index: 1;
       top: 0;
       left: 0;
-      background-color: #ffffff;
+      background-color: #000000;
+      color: #ffffff;
       overflow-x: hidden;
-      padding-top: 20px;
+      padding: 20px 20px 20px 20px;
+      font-family: 'Smooch Sans', sans-serif;
+      font-size: 20px;
     }
 
 
     .svg_container {
-      margin-left: 160px; /* Same as the width of the sidenav */
+      margin-left: 180px; /* Same as the width of the sidenav */
       font-size: 28px; /* Increased text to enable scrolling */
-      padding: 0px 10px;
+    }
+
+    svg  { background-color:antiquewhite }
+
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 1px;  
+      background: white;  
+      outline: none;
+      opacity: 1;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%; 
+      background:antiquewhite;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #04AA6D;
+      cursor: pointer;
     }
 
   </style>
+
 </head>
 <body>
 
@@ -32,20 +79,46 @@
 <div class="sidenav">
 
 <form>
-  <p>Select Kumiko Pattern:</p>
+  <p>Kumiko Pattern:</p>
   <input type="radio" id="asanoha" name="kumiko_pattern" value="asanoha" checked>
-  <label for="html">Asanoha</label><br>
+  <label for="asanoha">Asanoha</label><br>
   <input type="radio" id="kagome" name="kumiko_pattern" value="kagome">
   <label for="kagome">Kagome</label><br>
   <input type="radio" id="kasana_rindo" name="kumiko_pattern" value="kasana_rindo">
-  <label for="javascript">Kasane-Rindo</label><br>
+  <label for="kasana_rindo">Kasane-Rindo</label><br>
   <input type="radio" id="tsumiishi_kikko" name="kumiko_pattern" value="tsumiishi_kikko">
-  <label for="javascript">Tsumiishi-Kikko</label>
-  <input type="radio" id="triangle_frame" name="kumiko_pattern" value="triangle_frame">
-  <label for="javascript">Triangle frame</label>
+  <label for="tsumiishi_kikko">Tsumiishi-Kikko</label><br>
+  
   <p>Other options:</p>
+  <input type="radio" id="triangle_frame" name="kumiko_pattern" value="triangle_frame">
+  <label for="triangle_frame">Triangle frame only</label><br>
   <input type="radio" id="delete_single_pattern" name="kumiko_pattern" value="delete_single_pattern">
-  <label for="javascript">Delete single Pattern</label>
+  <label for="delete_single_pattern">Delete (on click)</label>
+
+  <br><br> 
+
+  <p>Kukimo element size: <span id="slidervalue_element_size">40</span>px</p>
+  <div class="slidecontainer">
+    <input type="range" min="10" max="300" value="50" step="10" class="slider" id="slider_element_size">
+  </div>
+
+  <p>Triangle stroke width: <span id="slidervalue_triangle_stroke_width">40</span>px</p>
+  <div class="slidecontainer">
+    <input type="range" min="1" max="10" value="4" step="1" class="slider" id="slider_triangle_stroke_width">
+  </div>
+
+
+  <p>Pattern stroke width: <span id="slidervalue_pattern_stroke_width">40</span>px</p>
+  <div class="slidecontainer">
+    <input type="range" min="1" max="10" value="4" step="1" class="slider" id="slider_pattern_stroke_width">
+  </div>
+
+  <br><br> 
+  <button onclick="removeAllElements()">Reset</button>
+
+  <br><br> 
+  <button onclick="download(draw.svg(), 'kumiko.svg')">Download pattern</button>
+
 </form>
 
 
@@ -60,6 +133,70 @@
 
 <script>
 
+// initialize SVG.js
+var draw = SVG().addTo('#svg_container').size(2000, 2000).addClass('svg_pane');
+console.log(draw.viewbox())
+
+
+// init: slider - element size
+var sliderElementSize = document.getElementById("slider_element_size");
+var sliderElementSizeValueText = document.getElementById("slidervalue_element_size");
+sliderElementSizeValueText.innerHTML = sliderElementSize.value; // Display the default slider value
+
+// init: slider - triangle stroke width
+var sliderTriangleStrokeWidth = document.getElementById("slider_triangle_stroke_width");
+var sliderTriangleStrokeWidthValueText = document.getElementById("slidervalue_triangle_stroke_width");
+sliderTriangleStrokeWidthValueText.innerHTML = sliderTriangleStrokeWidth.value; // Display the default slider value
+
+// init: slider - pattern stroke width
+var sliderPatternStrokeWidth = document.getElementById("slider_pattern_stroke_width");
+var sliderPatternStrokeWidthValueText = document.getElementById("slidervalue_pattern_stroke_width");
+sliderPatternStrokeWidthValueText.innerHTML = sliderPatternStrokeWidth.value; // Display the default slider value
+
+
+
+// main settings 
+var sidelen = parseInt(sliderElementSize.value);
+var height = sidelen * Math.cos(Math.PI / 6);
+draw.data('attrTriangle', {
+  fill: 'none', 
+  stroke: 'black',
+  'stroke-width': sliderTriangleStrokeWidth.value,
+  'stroke-linecap': 'round',
+  'stroke-linejoin': 'round'
+});
+draw.data('attrPattern', {
+  fill: 'none', 
+  stroke: 'black',
+  'stroke-width': sliderPatternStrokeWidth.value,
+  'stroke-linecap': 'round',
+  'stroke-linejoin': 'round'
+});
+
+// Update the slider value each time the slider handle is dragged
+sliderElementSize.oninput = function() {
+  sliderElementSizeValueText.innerHTML = this.value;
+  sidelen = parseInt(this.value);
+  height = sidelen * Math.cos(Math.PI / 6);
+} 
+
+// Update the slider value each time the slider handle is dragged
+sliderTriangleStrokeWidth.oninput = function() {
+  sliderTriangleStrokeWidthValueText.innerHTML = this.value;
+  strokeWidthTriangle = parseInt(this.value);
+  var attr = draw.data('attrTriangle');
+  attr['stroke-width'] = strokeWidthTriangle;
+  draw.data('attrTriangle', attr);
+} 
+
+// Update the slider value each time the slider handle is dragged
+sliderPatternStrokeWidth.oninput = function() {
+  sliderPatternStrokeWidthValueText.innerHTML = this.value;  
+  strokeWidthPattern = parseInt(this.value);
+  var attr = draw.data('attrPattern');
+  attr['stroke-width'] = strokeWidthPattern;
+  draw.data('attrPattern', attr);
+} 
 
 class Point {
   constructor(x, y) {
@@ -89,22 +226,6 @@ function getCurrentKumikoPattern() {
   return form.querySelector('input[name="kumiko_pattern"]:checked').value
 }
 
-
-// initialize SVG.js
-var draw = SVG().addTo('#svg_container').size(2000, 2000).addClass('svg_pane');
-
-console.log(draw.viewbox()
-)
-// main settings 
-var sidelen = 40;
-var height = sidelen * Math.cos(Math.PI / 6);
-var attr = {
-  fill: 'none', 
-  stroke: ' blue',
-  'stroke-width': 4,
-  'stroke-linecap': 'round',
-  'stroke-linejoin': 'round'
-}
 
 // Create an map for remembering the svg objects in the pane
 const memoryMap = new Map();
@@ -201,19 +322,14 @@ draw.click(function(event) {
     triangle_centroid = new Point(point_rect_upper_left.x + sidelen / 2, point_rect_upper_left.y + height / 3);
   }
 
-  var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], {
-    fill: 'none', 
-    stroke: ' blue',
-    'stroke-width': 4,
-    'stroke-linecap': 'round',
-    'stroke-linejoin': 'round'
-  })
+  var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], draw.data('attrTriangle'))
 
 
   triangleId = getTriangleId(triangle_point1, triangle_point2, triangle_point3)
   pushValuesIntoMap(memoryMap, triangleId, [triangle]);
 
   var svg_elements;
+  var attr = draw.data('attrPattern');
   switch(getCurrentKumikoPattern()) {
     case 'asanoha':
       svg_elements = draw_inlay_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
@@ -280,6 +396,12 @@ function removeElements(svgElements) {
   }
 }
 
+function removeAllElements() {
+  for (const key in memoryMap.keys) {
+    removeElements(memoryMap.get(key))
+  }
+}
+
 function drawPolyline(pointList, attributes) {
 
   polylinePointlist = []
@@ -290,71 +412,6 @@ function drawPolyline(pointList, attributes) {
   // draw polyline
   return draw.polyline(polylinePointlist).attr(attributes)
 }
-
-//height = Math.sqrt(3)/2*10;
-/* console.log(height); */
-
-
-// for (let row = 0; row < 8; row++) {
-//   for (let col = 0; col < 8; col++) {
-//     r_offset = row * sidelen + (col % 2) * sidelen / 2;
-//     c_offset = col * height;
-
-//     triangle_p1 = [r_offset, c_offset]
-//     triangle_p2 = [r_offset + sidelen / 2, c_offset + height]
-//     triangle_p3 = [r_offset + sidelen, c_offset]
-
-//     triangle_centroid = [r_offset + sidelen / 2, c_offset + height / 3]
-
-//     // draw triangle
-//     var polyline = draw.polyline([triangle_p1, triangle_p2, triangle_p3, triangle_p1]).attr(attr)
-
-//     var rect = draw.rect(sidelen, height).move(r_offset, c_offset).attr({
-//       fill: 'none', 
-//       stroke: ' red',
-//       'stroke-width': 1,
-// })
-
-//     threshold = 0.05;
-
-//     // draw inlay
-//     // if (r() > threshold) {
-//     //   draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
-//     // }
-//     // if (r() > threshold) {  
-//     //   draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
-//     // }
-//     // if (r() > threshold) {
-//     //   // draw_inlay_kagome(triangle_p1, triangle_p2, triangle_p3, triangle_centroid)
-//     // }
-//     // if (r() > threshold) {
-//     //   draw_inlay_kasane_rindo(triangle_p1, triangle_p2, triangle_p3)
-//     // }
-
-//     // draw inlay of neighbouring triangle
-//     ntriangle_p1 = [r_offset + 3 / 2 * sidelen, c_offset + height]
-//     ntriangle_p2 = triangle_p2
-//     ntriangle_p3 = triangle_p3
-//     ntriangle_centroid = [r_offset + sidelen, c_offset + height * 2 / 3]
-
-//     // draw neighbouring triangle
-//     var polyline = draw.polyline([ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_p1]).attr(attr)
-
-//     // draw inlay for neighbouring triangle    
-//     // if (r() > threshold) {
-//     //   // draw_inlay_asanoha(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
-//     // }
-//     // if (r() > threshold) {
-//     //   draw_inlay_tsumiishi_kikko(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
-//     // }
-//     // if (r() > threshold) {
-//     //   // draw_inlay_kagome(ntriangle_p1, ntriangle_p2, ntriangle_p3, ntriangle_centroid)
-//     // }
-//     // if (r() > threshold) {
-//     //   draw_inlay_kasane_rindo(ntriangle_p1, ntriangle_p2, ntriangle_p3)
-//     // }
-//   }
-// }
 
 function draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   var pattern = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
@@ -402,7 +459,29 @@ function r() {
   return Math.random()
 }
 
-var svg_export = draw.svg()
+
+function download(text, filename) {
+    // Create a Blob containing the text
+    const blob = new Blob([text], { type: 'text/plain' });
+
+    // Create a link element
+    const link = document.createElement('a');
+
+    // Set the download attribute with the filename
+    link.download = filename;
+
+    // Create a URL for the Blob and set it as the href attribute of the link
+    link.href = URL.createObjectURL(blob);
+
+    // Append the link to the document
+    document.body.appendChild(link);
+
+    // Trigger a click on the link to start the download
+    link.click();
+
+    // Remove the link from the document
+    document.body.removeChild(link);
+}
 
 </script>
 
