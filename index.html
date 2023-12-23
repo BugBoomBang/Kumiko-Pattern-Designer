@@ -68,6 +68,10 @@
       cursor: pointer;
     }
 
+    .invisible {
+      visibility: hidden;
+    }
+
   </style>
 
 </head>
@@ -114,10 +118,14 @@
 
   <br><br> 
 
-  <p>Kukimo element size: <span id="slidervalue_element_size">40</span>px</p>
+  <input type="checkbox" id="grid" name="grid" value="toggle_grid">
+  <label for="grid">Show grid</label>
+  <br><br>
+
+  <!-- <p>Kukimo element size: <span id="slidervalue_element_size">40</span>px</p>
   <div class="slidecontainer">
     <input type="range" min="10" max="300" value="50" step="10" class="slider" id="slider_element_size">
-  </div>
+  </div> -->
 
   <p>Triangle stroke width: <span id="slidervalue_triangle_stroke_width">40</span>px</p>
   <div class="slidecontainer">
@@ -157,14 +165,17 @@
 <script>
 
 // initialize SVG.js
-var draw = SVG().addTo('#svg_container').size(1500, 1000).addClass('svg_pane');
+svgPaneWidth = 1500;
+svgPaneHeight = 1000;
+var draw = SVG().addTo('#svg_container').size(svgPaneWidth, svgPaneHeight).addClass('svg_pane');
 console.log(draw.viewbox())
 
 
-// init: slider - element size
-var sliderElementSize = document.getElementById("slider_element_size");
-var sliderElementSizeValueText = document.getElementById("slidervalue_element_size");
-sliderElementSizeValueText.innerHTML = sliderElementSize.value; // Display the default slider value
+// // init: slider - element size
+var sidelen = 50;
+// var sliderElementSize = document.getElementById("slider_element_size");
+// var sliderElementSizeValueText = document.getElementById("slidervalue_element_size");
+// sliderElementSizeValueText.innerHTML = sliderElementSize.value; // Display the default slider value
 
 // init: slider - triangle stroke width
 var sliderTriangleStrokeWidth = document.getElementById("slider_triangle_stroke_width");
@@ -179,7 +190,7 @@ sliderPatternStrokeWidthValueText.innerHTML = sliderPatternStrokeWidth.value; //
 
 
 // main settings 
-var sidelen = parseInt(sliderElementSize.value);
+// var sidelen = parseInt(sliderElementSize.value);
 var height = sidelen * Math.cos(Math.PI / 6);
 draw.data('attrTriangle', {
   fill: 'none', 
@@ -196,12 +207,12 @@ draw.data('attrPattern', {
   'stroke-linejoin': 'round'
 });
 
-// Update the slider value each time the slider handle is dragged
-sliderElementSize.oninput = function() {
-  sliderElementSizeValueText.innerHTML = this.value;
-  sidelen = parseInt(this.value);
-  height = sidelen * Math.cos(Math.PI / 6);
-} 
+// // Update the slider value each time the slider handle is dragged
+// sliderElementSize.oninput = function() {
+//   sliderElementSizeValueText.innerHTML = this.value;
+//   sidelen = parseInt(this.value);
+//   height = sidelen * Math.cos(Math.PI / 6);
+// } 
 
 // Update the slider value each time the slider handle is dragged
 sliderTriangleStrokeWidth.oninput = function() {
@@ -237,6 +248,7 @@ class History {
     const historyEntry = new HistoryEntry();
     historyEntry.addedElements = addedElements;
     historyEntry.gridId = gridId
+    console.log('history: ' + addedElements.length + ' element(s) added (' + gridId + ')');
     this.historyList.push(historyEntry)
   }
 
@@ -244,18 +256,23 @@ class History {
     const historyEntry = new HistoryEntry();
     historyEntry.removedElements = removedElements;
     historyEntry.gridId = gridId
+    console.log('history: ' + removeElements.length + ' element(s) removed (' + gridId + ')');    
     this.historyList.push(historyEntry)
   }
 
   pop() {
-    var latestEntry = this.historyList.at(-1);
-    if (latestEntry.addedElements) {
-      removeElements(latestEntry.addedElements)
-    }  
-    else if (latestEntry.removedElements) {
-      // TODO: redraw
+    if (this.historyList.length>0) {
+      var latestEntry = this.historyList.at(-1);
+      if (latestEntry.addedElements.length) {
+        console.log('history undo: ' + latestEntry.removedElements.length + ' element(s) hidden (' + latestEntry.gridId + ')'); 
+        hideElements(latestEntry.addedElements)        
+      }  
+      else if (latestEntry.removedElements.length) {        
+        console.log('history undo: ' + latestEntry.removedElements.length + ' element(s) redrawn (' + latestEntry.gridId + ')'); 
+        showElements(latestEntry.removedElements)      
+      }
+      this.historyList.pop();
     }
-    this.historyList.pop();
   }
 }
 
@@ -272,7 +289,6 @@ class HistoryEntry {
 // Assuming you have the form element containing the radio buttons
 var form = document.querySelector('form');
 
-
 // Add an event listener to the form to detect changes in the radio button group
 form.addEventListener('change', function() {
   // Get the selected radio button within the group
@@ -283,12 +299,45 @@ form.addEventListener('change', function() {
     var selectedValue = selectedOption.value;
     console.log('Selected Value:', selectedValue);
   }
+
+  var gridCheckbox = form.querySelector('input[name="grid"]:checked');
+  if (gridCheckbox) {
+    showGrid();
+  }
+  else {
+    hideGrid();
+  }
+
 });
 
 function getCurrentKumikoPattern() {
   return form.querySelector('input[name="kumiko_pattern"]:checked').value
 }
 
+function initGrid(circleDiameter) {
+  radius = circleDiameter / 2;
+  for (var row = 0; row<svgPaneWidth/sidelen; row++) {
+    for (var col = 0; col<svgPaneHeight/height; col++) {
+      // draw point
+      x_offset = col * sidelen - (row % 2) * sidelen / 2;  // every second row has an additional x-offset of a half triangle sidelength
+      y_offset = row * height;
+
+      var circle = draw.circle(circleDiameter).move(x_offset-radius, y_offset-radius);
+      circle.addClass('gridpoint')
+    }
+  }
+}
+
+function showGrid() {
+  document.querySelectorAll('.gridpoint').forEach(it => { it.style.visibility = 'visible'} );
+}
+
+function hideGrid() {
+  document.querySelectorAll('.gridpoint').forEach(it => { it.style.visibility = 'hidden'} );
+}
+
+initGrid(2);
+showGrid();
 
 // Create an map for remembering the svg objects in the pane
 const memoryMap = new Map();
@@ -312,11 +361,11 @@ draw.click(function(event) {
     return;
   }
 
-  console.log('event: x:' + event.x + ', y:' + event.y);
-  console.log('clickPoint: x:' + clickPoint.x + ', y:' + clickPoint.y);
-  console.log('height: ' + Math.round(height));
-  console.log(Math.round(clickPoint.y/height))
-  console.log(draw.node.getBoundingClientRect())
+  // console.log('event: x:' + event.x + ', y:' + event.y);
+  // console.log('clickPoint: x:' + clickPoint.x + ', y:' + clickPoint.y);
+  // console.log('height: ' + Math.round(height));
+  // console.log(Math.round(clickPoint.y/height))
+  // console.log(draw.node.getBoundingClientRect())
   // console.log('clientX/clientY: x:' + event.clientX + ', y:' + event.clientY);
 
 
@@ -378,7 +427,7 @@ draw.click(function(event) {
 
   if (clickPoint.y > y_line1_at_clicked_point) {
     // case 1: point belongs to left triangle
-    console.log('// case 1: point belongs to left triangle')
+    // console.log('// case 1: point belongs to left triangle')
     triangle_point1 = point_rect_upper_left;
     triangle_point2 = point_rect_lower_middle;
     triangle_point3 = new Point(point_rect_lower_middle.x-sidelen, point_rect_lower_middle.y);
@@ -386,7 +435,7 @@ draw.click(function(event) {
   }
   else if (clickPoint.y > y_line2_at_clicked_point) {
     // case 3: point belongs to left triangle
-    console.log('// case 3: point belongs to right triangle')
+    // console.log('// case 3: point belongs to right triangle')
     triangle_point1 = point_rect_upper_right;
     triangle_point2 = point_rect_lower_middle;
     triangle_point3 = new Point(point_rect_lower_middle.x+sidelen, point_rect_lower_middle.y);  
@@ -394,7 +443,7 @@ draw.click(function(event) {
   }
   else {
     // case 2: point belongs to left triangle
-    console.log('// case 2: point belongs to middle triangle')
+    // console.log('// case 2: point belongs to middle triangle')
     triangle_point1 = point_rect_upper_left;
     triangle_point2 = point_rect_upper_right;
     triangle_point3 = point_rect_lower_middle;   
@@ -402,7 +451,6 @@ draw.click(function(event) {
   }
 
   var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], draw.data('attrTriangle'))
-
 
   triangleId = getTriangleId(triangle_point1, triangle_point2, triangle_point3)
   pushValuesIntoMap(memoryMap, triangleId, [triangle]);
@@ -413,32 +461,35 @@ draw.click(function(event) {
     case 'asanoha':
       svg_elements = draw_inlay_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
-      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
       svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
-      break
+      break;
     case 'kagome':
       svg_elements = draw_inlay_kagome(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
-      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
       svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
-      break
+      break;
     case 'kasana_rindo':
       svg_elements = draw_inlay_kasane_rindo(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
-      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
       svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
-  break
+      break;
     case 'tsumiishi_kikko':
       svg_elements = draw_inlay_tsumiishi_kikko(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
-      pushValuesIntoMap(memoryMap, triangleId, svg_elements);
       svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
-      break
+      break;
     case 'triangle_frame':
+      svg_elements = [triangle];
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
+      history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;    
     case 'delete_single_pattern':
       // delete patterns at clicked region
@@ -446,7 +497,7 @@ draw.click(function(event) {
       // console.log(memoryMap)
       // console.log(triangleId)
       history.writeRemovedElementsToHistory(triangleId, memoryMap.get(triangleId));
-      removeElements(memoryMap.get(triangleId));      
+      hideElements(memoryMap.get(triangleId));      
       break;
     default:
       console.log('unknown kumiko pattern: ' + getCurrentKumikoPattern())
@@ -477,10 +528,25 @@ function getTriangleId(triangle_point1, triangle_point2, triangle_point3) {
   return triangle_point1.x + '-' + triangle_point1.y + '-' + triangle_point2.x + '-' + triangle_point2.y + '-' + triangle_point3.x + '-' + triangle_point3.y;
 }
 
+
+function showElements(svgElements) {
+  // console.log('hideElement() [size=' + svgElements.size + ']');
+  for (const elem of svgElements) {
+    elem.show();
+  }
+}
+
+function hideElements(svgElements) {
+  // console.log('hideElement() [size=' + svgElements.size + ']');
+  for (const elem of svgElements) {
+    elem.hide();
+  }
+}
+
 function removeElements(svgElements) {
   // console.log('removeElement() [size=' + svgElements.size + ']');
   for (const elem of svgElements) {
-    elem.remove(); 
+    elem.remove();     
   }
 }
 
