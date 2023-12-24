@@ -165,8 +165,8 @@
 <script>
 
 // initialize SVG.js
-svgPaneWidth = 1500;
-svgPaneHeight = 1000;
+svgPaneWidth = 1510;
+svgPaneHeight = 2000;
 var draw = SVG().addTo('#svg_container').size(svgPaneWidth, svgPaneHeight).addClass('svg_pane');
 console.log(draw.viewbox())
 
@@ -316,8 +316,8 @@ function getCurrentKumikoPattern() {
 
 function initGrid(circleDiameter) {
   radius = circleDiameter / 2;
-  for (var row = 0; row<svgPaneWidth/sidelen; row++) {
-    for (var col = 0; col<svgPaneHeight/height; col++) {
+  for (var col = 0; col<svgPaneWidth/sidelen; col++) {
+    for (var row = 0; row<svgPaneHeight/height; row++) {
       // draw point
       x_offset = col * sidelen - (row % 2) * sidelen / 2;  // every second row has an additional x-offset of a half triangle sidelength
       y_offset = row * height;
@@ -666,7 +666,7 @@ function simulateClickEvent(x, y, delay, it) {
   if (it<=0){
     return;
   }
-  draw.fire('click', {'x': x, 'y': y});
+  draw.fire('click', {'x': x - window.scrollX || window.pageXOffset, 'y': y - window.scrollY || window.pageYOffset});
   x = x + (Math.random()-0.5)*sidelen*2;
   y = y + (Math.random()-0.5)*height*2;  
   it -= 1;
