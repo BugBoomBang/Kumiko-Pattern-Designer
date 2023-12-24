@@ -118,7 +118,7 @@
 
   <br><br> 
 
-  <input type="checkbox" id="grid" name="grid" value="toggle_grid">
+  <input type="checkbox" id="grid" name="grid" value="toggle_grid" checked>
   <label for="grid">Show grid</label>
   <br><br>
 
@@ -256,7 +256,7 @@ class History {
     const historyEntry = new HistoryEntry();
     historyEntry.removedElements = removedElements;
     historyEntry.gridId = gridId
-    console.log('history: ' + removeElements.length + ' element(s) removed (' + gridId + ')');    
+    console.log('history: ' + removedElements.length + ' element(s) removed (' + gridId + ')');    
     this.historyList.push(historyEntry)
   }
 
@@ -450,9 +450,16 @@ draw.click(function(event) {
     triangle_centroid = new Point(point_rect_upper_left.x + sidelen / 2, point_rect_upper_left.y + height / 3);
   }
 
-  var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], draw.data('attrTriangle'))
 
   triangleId = getTriangleId(triangle_point1, triangle_point2, triangle_point3)
+  if (getCurrentKumikoPattern() === 'delete_single_pattern') {
+      // delete patterns at clicked region
+      history.writeRemovedElementsToHistory(triangleId, memoryMap.get(triangleId));
+      hideElements(memoryMap.get(triangleId)); 
+      return;   
+  }
+
+  var triangle = drawPolyline([triangle_point1, triangle_point2, triangle_point3, triangle_point1], draw.data('attrTriangle'))
   pushValuesIntoMap(memoryMap, triangleId, [triangle]);
 
   var svg_elements;
@@ -491,14 +498,6 @@ draw.click(function(event) {
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;    
-    case 'delete_single_pattern':
-      // delete patterns at clicked region
-      // console.log('memoryMap[triangleId]=' + memoryMap[triangleId])
-      // console.log(memoryMap)
-      // console.log(triangleId)
-      history.writeRemovedElementsToHistory(triangleId, memoryMap.get(triangleId));
-      hideElements(memoryMap.get(triangleId));      
-      break;
     default:
       console.log('unknown kumiko pattern: ' + getCurrentKumikoPattern())
     
