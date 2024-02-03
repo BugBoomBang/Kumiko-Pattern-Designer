@@ -247,6 +247,13 @@ draw.click(function(event) {
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;
+    case 'yae_asanoha':
+      svg_elements = draw_inlay_yae_asanoha(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
+      history.writeAddedElementsToHistory(triangleId, svg_elements);
+      break;
     case 'shippo_kikkou':
       svg_elements = draw_inlay_shippo_kikkou(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
@@ -296,7 +303,7 @@ draw.click(function(event) {
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;
-    case 'triangle_frame':
+    case 'mitsukude':
       svg_elements = [triangle];
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
@@ -328,6 +335,18 @@ function drawPolyline(pointList, attributes) {
 
 function draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   var pattern = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
+  return [pattern];
+}
+
+function draw_inlay_yae_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  // var basic_pattern = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
+  var s = 1.3
+  var p1 = getIntermediatePoint(triangle_p1, triangle_centroid, 1.3)
+  var p2 = getIntermediatePoint(triangle_p2, triangle_centroid, 1.3)
+  var p3 = getIntermediatePoint(triangle_p3, triangle_centroid, 1.3)
+  var pattern1 = drawPolyline([triangle_p2, p1, triangle_p3, p1, triangle_p1], attr);
+  var pattern2 = drawPolyline([triangle_p1, p2, triangle_p3, p2, triangle_p2], attr);
+  var pattern3 = drawPolyline([triangle_p1, p3, triangle_p2, p3, triangle_p3], attr);
   return [pattern];
 }
 
