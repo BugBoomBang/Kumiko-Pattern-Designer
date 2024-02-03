@@ -1,4 +1,6 @@
 
+// inspiration: https://yoshiharawoodworks.com/en/about/kumiko/
+
 // // init: slider - element size
 // var sliderElementSize = document.getElementById("slider_element_size");
 // var sliderElementSizeValueText = document.getElementById("slidervalue_element_size");
@@ -207,7 +209,7 @@ draw.click(function(event) {
     triangle_centroid = new Point(point_rect_lower_middle.x - sidelen / 2, point_rect_lower_middle.y - height / 3);  
   }
   else if (clickPoint.y > y_line2_at_clicked_point) {
-    // case 3: point belongs to left triangle
+    // case 3: point belongs to right triangle
     // console.log('// case 3: point belongs to right triangle')
     triangle_point1 = point_rect_upper_right;
     triangle_point2 = point_rect_lower_middle;
@@ -215,7 +217,7 @@ draw.click(function(event) {
     triangle_centroid = new Point(point_rect_lower_middle.x + sidelen / 2, point_rect_lower_middle.y - height / 3);  
   }
   else {
-    // case 2: point belongs to left triangle
+    // case 2: point belongs to middle triangle
     // console.log('// case 2: point belongs to middle triangle')
     triangle_point1 = point_rect_upper_left;
     triangle_point2 = point_rect_upper_right;
@@ -245,6 +247,13 @@ draw.click(function(event) {
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;
+    case 'shippo_kikkou':
+      svg_elements = draw_inlay_shippo_kikkou(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
+      history.writeAddedElementsToHistory(triangleId, svg_elements);
+      break;      
     case 'kagome':
       svg_elements = draw_inlay_kagome(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
       // add svg_elements to map (in order to be able to delete it later on)  
@@ -280,6 +289,13 @@ draw.click(function(event) {
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
       history.writeAddedElementsToHistory(triangleId, svg_elements);
       break;
+    case 'bishamon_kikkou':
+      svg_elements = draw_inlay_bishamon_kikkou(triangle_point1, triangle_point2, triangle_point3, triangle_centroid, attr); 
+      // add svg_elements to map (in order to be able to delete it later on)  
+      svg_elements.push(triangle);
+      pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
+      history.writeAddedElementsToHistory(triangleId, svg_elements);
+      break;
     case 'triangle_frame':
       svg_elements = [triangle];
       pushValuesIntoMap(memoryMap, triangleId, svg_elements);      
@@ -310,14 +326,16 @@ function drawPolyline(pointList, attributes) {
   return draw.polyline(polylinePointlist).attr(attributes)
 }
 
-function draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
-  var pattern = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
-  return [pattern];
-}
-
 function draw_inlay_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   var pattern = drawPolyline([triangle_p1, triangle_centroid, triangle_p2, triangle_centroid, triangle_p3], attr);
   return [pattern];
+}
+
+function draw_inlay_shippo_kikkou(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  var path1 = draw.path(`M ${triangle_p1.x},${triangle_p1.y} A ${sidelen},${sidelen} 1 0,0 ${triangle_p2.x},${triangle_p2.y}`).attr(attr)
+  var path2 = draw.path(`M ${triangle_p2.x},${triangle_p2.y} A ${sidelen},${sidelen} 1 0,0 ${triangle_p3.x},${triangle_p3.y}`).attr(attr)
+  var path3 = draw.path(`M ${triangle_p3.x},${triangle_p3.y} A ${sidelen},${sidelen} 1 0,0 ${triangle_p1.x},${triangle_p1.y}`).attr(attr)
+  return [path1, path2, path3];
 }
 
 function draw_inlay_kagome(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
@@ -348,6 +366,11 @@ function draw_inlay_kasane_rindo(triangle_p1, triangle_p2, triangle_p3, triangle
   return [line1, line2];
 }
 
+function draw_inlay_tsumiishi_kikko(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  var pattern = drawPolyline([getIntermediatePoint(triangle_p1, triangle_p2, 0.5), triangle_centroid, getIntermediatePoint(triangle_p2, triangle_p3, 0.5), triangle_centroid, getIntermediatePoint(triangle_p1, triangle_p3, 0.5)], attr);
+  return [pattern];
+}
+
 function draw_inlay_goma(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
   // line 1
   var p1 = getIntermediatePoint(triangle_p2, triangle_p1, 0.2)
@@ -362,7 +385,7 @@ function draw_inlay_goma(triangle_p1, triangle_p2, triangle_p3, triangle_centroi
   var p2 = getIntermediatePoint(triangle_p2, triangle_p3, 0.2)
   var line3 = draw.line(p1.x, p1.y, p2.x, p2.y).attr(attr);
 
-  return [line1, line2, lilne3];
+  return [line1, line2, line3];
 }
 
 function draw_inlay_yae_urahana_kikkou(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
@@ -383,7 +406,29 @@ function draw_inlay_yae_urahana_kikkou(triangle_p1, triangle_p2, triangle_p3, tr
   var line2 = draw.line(triangle_p2.x, triangle_p2.y, p3.x, p3.y).attr(attr);
   var line3 = draw.line(triangle_p3.x, triangle_p3.y, p5.x, p5.y).attr(attr);
 
-  var polyline = drawPolyline([p1, p4, p5, p2, p3, p6, p1], attr);
+  var hexagon = drawPolyline([p1, p4, p5, p2, p3, p6, p1], attr);
+
+  return [line1, line2, line3, hexagon];
+}
+
+function draw_inlay_bishamon_kikkou(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
+  var s = 0.33
+  
+  var p1, p2, p3;
+  if (triangle_p1.y === triangle_p2.y) {
+    console.log('same')
+    p1 = getIntermediatePoint(triangle_p2, triangle_p1, s)
+    p2 = getIntermediatePoint(triangle_p1, triangle_p3, s)
+    p3 = getIntermediatePoint(triangle_p3, triangle_p2, s)
+  } else {
+    p1 = getIntermediatePoint(triangle_p1, triangle_p2, s)
+    p2 = getIntermediatePoint(triangle_p3, triangle_p1, s)
+    p3 = getIntermediatePoint(triangle_p2, triangle_p3, s)
+  }
+  
+  var line1 = draw.line(p1.x, p1.y, triangle_centroid.x, triangle_centroid.y).attr(attr);
+  var line2 = draw.line(p2.x, p2.y, triangle_centroid.x, triangle_centroid.y).attr(attr);
+  var line3 = draw.line(p3.x, p3.y, triangle_centroid.x, triangle_centroid.y).attr(attr);
 
   return [line1, line2, line3];
 }
