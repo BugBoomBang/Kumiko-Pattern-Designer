@@ -61,6 +61,50 @@ sliderPatternStrokeWidth.oninput = function() {
   draw.data('attrPattern', attr);
 } 
 
+// Select the element you want to trigger click events on
+const svgContainer = document.getElementById("svg_container");
+
+let clickInterval;
+
+// Function to trigger a click event
+const triggerClick = () => {
+  console.log("click triggered")
+  // simulate a click event with the current mouse coordinates
+  const event = new MouseEvent("click", { 
+    view: window, 
+    bubbles: true, 
+    cancelable: true, 
+    clientX: mouseX, 
+    clientY: mouseY
+  });
+  draw.fire("click", event);
+};
+
+// Event listener for mouse down
+const onMouseDown = () => {
+  console.log("mouse down")
+  triggerClick();
+  clickInterval = setInterval(() => {triggerClick()}, 50);
+};
+
+// Event listener for mouse up
+const onMouseUp = () => {
+  // Stop triggering click events
+  console.log("mouse up")
+  clearInterval(clickInterval);
+};
+
+let mouseX = 0;
+let mouseY = 0;
+const onMouseMove = (event) => {
+  mouseX = event.clientX; // X-coordinate of the mouse pointer
+  mouseY = event.clientY; // Y-coordinate of the mouse pointer
+};
+
+// Attach event listeners
+svgContainer.addEventListener("mousedown", onMouseDown);
+svgContainer.addEventListener("mouseup", onMouseUp);
+svgContainer.addEventListener("mousemove", onMouseMove);
 
 
 // Assuming you have the form element containing the radio buttons
@@ -347,7 +391,7 @@ function draw_inlay_yae_asanoha(triangle_p1, triangle_p2, triangle_p3, triangle_
   var pattern1 = drawPolyline([triangle_p2, p1, triangle_p3, p1, triangle_p1], attr);
   var pattern2 = drawPolyline([triangle_p1, p2, triangle_p3, p2, triangle_p2], attr);
   var pattern3 = drawPolyline([triangle_p1, p3, triangle_p2, p3, triangle_p3], attr);
-  return [pattern];
+  return [pattern1, pattern2, pattern3];
 }
 
 function draw_inlay_shippo_kikkou(triangle_p1, triangle_p2, triangle_p3, triangle_centroid, attr) {
